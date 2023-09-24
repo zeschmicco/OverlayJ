@@ -19,7 +19,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
+import com.sun.jna.Native;
+import com.sun.jna.platform.win32.User32;
+import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinUser;
+
 public class Overlay extends Window {
+    final Color transparent = new Color(0, 0, 0, 0);
 
     int edgeLength = 28;
     int thinkness = 2;
@@ -27,18 +33,63 @@ public class Overlay extends Window {
     public Overlay() {
         super(null);
 
+        enableSystemTray();
+
         setAlwaysOnTop(true);
+        setBackground(transparent);
         setLocation(calcLocation());
         setSize(calcDimension());
-        setTransparent();
 
         setVisible(true);
 
+        enableWinTransparency();
+    }
+
+    void enableSystemTray() {
+        MenuItem action = new MenuItem("Quit");
+        action.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        PopupMenu trayPopupMenu = new PopupMenu();
+        trayPopupMenu.add(action);
+
+        URL imageURL = getClass().getResource("icon.png");
+        Image image = Toolkit.getDefaultToolkit().getImage(imageURL);
+        TrayIcon trayIcon = new TrayIcon(image, "OverlayJ", trayPopupMenu);
+        trayIcon.setImageAutoSize(true);
+
         try {
-            sysTray();
+            SystemTray.getSystemTray().add(trayIcon);
         } catch (AWTException e) {
             e.printStackTrace();
         }
+
+    }
+
+    Dimension calcDimension() {
+        return new Dimension(edgeLength, edgeLength);
+    }
+
+    Point calcLocation() {
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        DisplayMode dm = gd.getDisplayMode();
+
+        return new Point(dm.getWidth() / 2 - edgeLength / 2, dm.getHeight() / 2 - edgeLength / 2);
+    }
+
+    void enableWinTransparency() {
+        HWND hwnd = new HWND();
+        hwnd.setPointer(Native.getComponentPointer(this));
+
+        int wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE);
+        wl = wl | WinUser.WS_EX_LAYERED | WinUser.WS_EX_TRANSPARENT;
+
+        User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl);
     }
 
     @Override
@@ -63,51 +114,12 @@ public class Overlay extends Window {
         g.fillRect(offset, center + 6, thinkness, center - 6);
 
         g.setColor(Color.CYAN);
-        // g.drawOval(offset - 2, offset - 2, 4, 4);
+        
+        // center, rectangle
+        g.fillRect(offset, offset, thinkness, thinkness);
+
+        // center, open circle
         g.drawOval(offset - 1, offset - 1, 3, 3);
-    }
-
-    void sysTray() throws AWTException {
-        SystemTray systemTray = SystemTray.getSystemTray();
-
-        URL imageURL = getClass().getResource("icon.png");
-        Image image = Toolkit.getDefaultToolkit().getImage(imageURL);
-
-        PopupMenu trayPopupMenu = new PopupMenu();
-
-        // 1t menuitem for popupmenu
-        MenuItem action = new MenuItem("Quit");
-        action.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
-        trayPopupMenu.add(action);
-
-        // setting tray icon
-        TrayIcon trayIcon = new TrayIcon(image, "OverlayJ", trayPopupMenu);
-        // adjust to default size as per system recommendation
-        trayIcon.setImageAutoSize(true);
-
-        systemTray.add(trayIcon);
-    }
-
-    void setTransparent() {
-        Color transparent = new Color(127, 0, 0, 0);
-        setBackground(transparent);
-    }
-
-    Dimension calcDimension() {
-        return new Dimension(edgeLength, edgeLength);
-    }
-
-    Point calcLocation() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice gd = ge.getDefaultScreenDevice();
-        DisplayMode dm = gd.getDisplayMode();
-
-        return new Point(dm.getWidth() / 2 - edgeLength / 2, dm.getHeight() / 2 - edgeLength / 2);
     }
 
     public static void main(String[] args) {

@@ -12,8 +12,9 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // This dependency is used by the application.
-    // implementation 'com.google.guava:guava:32.1.1-jre'
+    // https://mvnrepository.com/artifact/net.java.dev.jna/jna
+    implementation 'net.java.dev.jna:jna:5.13.0'
+    implementation 'net.java.dev.jna:jna-platform:5.13.0'
 }
 
 java {
@@ -24,17 +25,17 @@ java {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'eu.schmic.overlay.Overlay'
+        attributes 'Main-Class': 'overlay.Overlay'
     }
 }
 
 launch4j {
-    mainClassName = 'eu.schmic.overlay.Overlay'
+    mainClassName = 'overlay.Overlay'
     icon = "${projectDir}/icon.ico"
 }
 
 application {
-    mainClass = 'eu.schmic.overlay.Overlay'
+    mainClass = 'overlay.Overlay'
 }
 
 tasks.named('test') {
