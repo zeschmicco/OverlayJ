@@ -17,23 +17,38 @@ import java.awt.TrayIcon;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.URL;
 
+import org.apache.commons.configuration2.INIConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
+import com.github.kwhat.jnativehook.GlobalScreen;
+import com.github.kwhat.jnativehook.NativeHookException;
+import com.github.kwhat.jnativehook.mouse.NativeMouseEvent;
+import com.github.kwhat.jnativehook.mouse.NativeMouseListener;
 import com.sun.jna.Native;
 import com.sun.jna.platform.win32.User32;
 import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.platform.win32.WinUser;
 
-public class Overlay extends Window {
+public class Overlay extends Window implements NativeMouseListener {
     final Color transparent = new Color(0, 0, 0, 0);
 
-    int edgeLength = 28;
-    int thinkness = 2;
+    INIConfiguration conf = new INIConfiguration();
+    boolean hideOnADS;
+
+    int edgeLength;
+    int thickness;
+    int center;
+    int offset;
 
     public Overlay() {
         super(null);
 
-        enableSystemTray();
+        readConfiguration();
 
         setAlwaysOnTop(true);
         setBackground(transparent);
@@ -42,7 +57,28 @@ public class Overlay extends Window {
 
         setVisible(true);
 
+        enableSystemTray();
         enableWinTransparency();
+    }
+
+    private void readConfiguration() {
+        try (FileReader fileReader = new FileReader("overlayj.ini")) {
+            conf.read(fileReader);
+        } catch (IOException ex) {
+            System.err.println("Could not read/find overlayj.ini, using defaults ...");
+            System.err.println(ex.getMessage());
+        } catch (ConfigurationException ex) {
+            System.err.println("There was a problem understanding overlayj.ini, aborting ...");
+            System.err.println(ex.getMessage());
+            System.exit(1);
+        } finally {
+            hideOnADS = conf.getBoolean("hide_on_ads", false);
+            edgeLength = conf.getInt("edge_length", 28);
+            thickness = conf.getInt("thickness", 2);
+
+            center = edgeLength / 2;
+            offset = center - thickness / 2;
+        }
     }
 
     void enableSystemTray() {
@@ -93,36 +129,61 @@ public class Overlay extends Window {
     }
 
     @Override
-    public void paint(Graphics g) {
-        super.paint(g);
+    public void paint(Graphics graphics) {
+        super.paint(graphics);
 
-        int center = edgeLength / 2;
-        int offset = center - thinkness / 2;
+        paintCross(graphics);
+        paintDot(graphics);
+    }
 
-        g.setColor(Color.red);
+    private void paintDot(Graphics graphics) {
+        graphics.setColor(Color.CYAN);
+
+        // center, rectangle
+        graphics.fillRect(offset, offset, thickness, thickness);
+
+        // center, open circle
+        graphics.drawOval(offset - 1, offset - 1, 3, 3);
+    }
+
+    private void paintCross(Graphics graphics) {
+        graphics.setColor(Color.red);
 
         // left
-        g.fillRect(0, offset, center - 6, thinkness);
+        graphics.fillRect(0, offset, center - 6, thickness);
 
         // right
-        g.fillRect(center + 6, offset, center - 6, thinkness);
+        graphics.fillRect(center + 6, offset, center - 6, thickness);
 
         // top
         // g.fillRect(y, 0, thinkness, center - 4);
 
         // bottom
-        g.fillRect(offset, center + 6, thinkness, center - 6);
+        graphics.fillRect(offset, center + 6, thickness, center - 6);
+    }
 
-        g.setColor(Color.CYAN);
-        
-        // center, rectangle
-        g.fillRect(offset, offset, thinkness, thinkness);
+    public void nativeMousePressed(NativeMouseEvent evt) {
+        if (!hideOnADS || evt.getButton() != MouseEvent.BUTTON2)
+            return;
+        setVisible(false);
+    }
 
-        // center, open circle
-        g.drawOval(offset - 1, offset - 1, 3, 3);
+    public void nativeMouseReleased(NativeMouseEvent evt) {
+        if (!hideOnADS || evt.getButton() != MouseEvent.BUTTON2)
+            return;
+        setVisible(true);
     }
 
     public static void main(String[] args) {
-        new Overlay();
+        try {
+            Overlay overlay = new Overlay();
+            GlobalScreen.registerNativeHook();
+            GlobalScreen.addNativeMouseListener(overlay);
+        } catch (NativeHookException ex) {
+            System.err.println("There was a problem registering the native hook.");
+            System.err.println(ex.getMessage());
+
+            System.exit(1);
+        }
     }
 }

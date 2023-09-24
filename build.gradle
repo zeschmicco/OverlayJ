@@ -15,6 +15,10 @@ dependencies {
     // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     implementation 'net.java.dev.jna:jna:5.13.0'
     implementation 'net.java.dev.jna:jna-platform:5.13.0'
+
+    implementation 'com.github.kwhat:jnativehook:2.2.2'
+
+    implementation 'org.apache.commons:commons-configuration2:2.9.0'
 }
 
 java {
