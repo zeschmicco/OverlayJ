@@ -18,12 +18,7 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.io.FileReader;
-import java.io.IOException;
 import java.net.URL;
-
-import org.apache.commons.configuration2.INIConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
@@ -37,18 +32,15 @@ import com.sun.jna.platform.win32.WinUser;
 public class Overlay extends Window implements NativeMouseListener {
     final Color transparent = new Color(0, 0, 0, 0);
 
-    INIConfiguration conf = new INIConfiguration();
-    boolean hideOnADS;
+    boolean hideOnADS = false;
 
-    int edgeLength;
-    int thickness;
-    int center;
-    int offset;
+    int edgeLength = 28;
+    int thickness = 2;
+    int center = edgeLength / 2;
+    int offset = center - thickness / 2;
 
     public Overlay() {
         super(null);
-
-        readConfiguration();
 
         setAlwaysOnTop(true);
         setBackground(transparent);
@@ -59,26 +51,6 @@ public class Overlay extends Window implements NativeMouseListener {
 
         enableSystemTray();
         enableWinTransparency();
-    }
-
-    private void readConfiguration() {
-        try (FileReader fileReader = new FileReader("overlayj.ini")) {
-            conf.read(fileReader);
-        } catch (IOException ex) {
-            System.err.println("Could not read/find overlayj.ini, using defaults ...");
-            System.err.println(ex.getMessage());
-        } catch (ConfigurationException ex) {
-            System.err.println("There was a problem understanding overlayj.ini, aborting ...");
-            System.err.println(ex.getMessage());
-            System.exit(1);
-        } finally {
-            hideOnADS = conf.getBoolean("hide_on_ads", false);
-            edgeLength = conf.getInt("edge_length", 28);
-            thickness = conf.getInt("thickness", 2);
-
-            center = edgeLength / 2;
-            offset = center - thickness / 2;
-        }
     }
 
     void enableSystemTray() {
@@ -103,7 +75,6 @@ public class Overlay extends Window implements NativeMouseListener {
         } catch (AWTException e) {
             e.printStackTrace();
         }
-
     }
 
     Dimension calcDimension() {
@@ -137,7 +108,7 @@ public class Overlay extends Window implements NativeMouseListener {
     }
 
     private void paintDot(Graphics graphics) {
-        graphics.setColor(Color.CYAN);
+        graphics.setColor(Color.GREEN);
 
         // center, rectangle
         graphics.fillRect(offset, offset, thickness, thickness);
@@ -175,8 +146,8 @@ public class Overlay extends Window implements NativeMouseListener {
     }
 
     public static void main(String[] args) {
+        Overlay overlay = new Overlay();
         try {
-            Overlay overlay = new Overlay();
             GlobalScreen.registerNativeHook();
             GlobalScreen.addNativeMouseListener(overlay);
         } catch (NativeHookException ex) {
