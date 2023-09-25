@@ -9,6 +9,7 @@ plugins {
 repositories {
     // mavenCentral()
     jcenter()
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -19,6 +20,8 @@ dependencies {
     implementation 'net.java.dev.jna:jna-platform:5.13.0'
 
     implementation 'com.github.kwhat:jnativehook:2.2.2'
+
+    implementation 'cc.ekblad:4koma:1.2.0'
 }
 
 java {

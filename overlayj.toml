@@ -1,0 +1,17 @@
+[crosshair]
+hide_on_ads = false
+size = 28
+
+[timer]
+background = "90,90,90,127"
+position = { x = 100, y = 100 }
+
+[timer.crate]
+label = "Crate"
+seconds = 900
+hotkey = "LeftAlt+PageDown"
+
+[timer.cargo]
+label = "Cargo"
+seconds = 900
+hotkey = "LeftAlt+PageUp"

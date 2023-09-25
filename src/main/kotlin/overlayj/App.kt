@@ -1,33 +1,25 @@
 package overlayj
 
-import com.github.kwhat.jnativehook.mouse.NativeMouseEvent
-import com.github.kwhat.jnativehook.mouse.NativeMouseListener
 import com.github.kwhat.jnativehook.GlobalScreen
 import com.github.kwhat.jnativehook.NativeHookException
-
+import com.github.kwhat.jnativehook.mouse.NativeMouseEvent
+import com.github.kwhat.jnativehook.mouse.NativeMouseListener
 import com.sun.jna.Native
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef.HWND
 import com.sun.jna.platform.win32.WinUser
-
-import java.awt.AWTException
 import java.awt.Color
 import java.awt.Dimension
 import java.awt.Graphics
 import java.awt.GraphicsEnvironment
-import java.awt.MenuItem
 import java.awt.Point
-import java.awt.PopupMenu
-import java.awt.SystemTray
-import java.awt.Toolkit
-import java.awt.TrayIcon
 import java.awt.Window
 import java.awt.event.MouseEvent
 
 class App() : Window(null), NativeMouseListener {
     val transparent = Color(0, 0, 0, 0)
 
-    val hideOnADS = false
+    val hideOnADS = true
     val adsButton = MouseEvent.BUTTON2
 
     val edgeLength = 28
@@ -36,17 +28,14 @@ class App() : Window(null), NativeMouseListener {
     val offset = center - thickness / 2
 
     init {
-        printMessageWithPrefix("#### init {}")
-
         setAlwaysOnTop(true)
         setBackground(transparent)
         setLocation(calcLocation())
         setSize(calcDimension())
-
         setVisible(true)
 
-        enableSystemTray()
-        enableWinTransparency()
+        enableSystray()
+        enableWindowsTransparency()
     }
 
     fun calcDimension(): Dimension {
@@ -61,27 +50,7 @@ class App() : Window(null), NativeMouseListener {
         return Point(dm.getWidth() / 2 - edgeLength / 2, dm.getHeight() / 2 - edgeLength / 2)
     }
 
-    fun enableSystemTray() {
-        try {
-            val action = MenuItem("Quit")
-            action.addActionListener { exit() }
-
-            val trayPopupMenu = PopupMenu()
-            trayPopupMenu.add(action)
-
-            val imageURL = javaClass.getResource("icon.png")
-            val image = Toolkit.getDefaultToolkit().getImage(imageURL)
-            val trayIcon = TrayIcon(image, "OverlayJ", trayPopupMenu)
-            trayIcon.setImageAutoSize(true)
-
-            SystemTray.getSystemTray().add(trayIcon)
-        } catch (e: AWTException) {
-            e.printStackTrace()
-            exit(1)
-        }
-    }
-
-    fun enableWinTransparency() {
+    fun enableWindowsTransparency() {
         val hwnd = HWND()
         hwnd.setPointer(Native.getComponentPointer(this))
 
@@ -93,25 +62,20 @@ class App() : Window(null), NativeMouseListener {
 
     override fun paint(graphics: Graphics) {
         super.paint(graphics)
-
         paintCross(graphics)
         paintDot(graphics)
     }
 
     override fun nativeMousePressed(evt: NativeMouseEvent) {
-        if (isADSButton(evt.getButton())) {
-            if (hideOnADS) setVisible(false)
+        when (evt.getButton()) {
+            adsButton -> if (hideOnADS) setVisible(false)
         }
     }
 
     override fun nativeMouseReleased(evt: NativeMouseEvent) {
-        if (isADSButton(evt.getButton())) {
-            if (hideOnADS) setVisible(true)
+        when (evt.getButton()) {
+            adsButton -> if (hideOnADS) setVisible(true)
         }
-    }
-
-    private fun isADSButton(aButton: Int): Boolean {
-        return aButton == adsButton
     }
 
     private fun paintDot(graphics: Graphics) {
@@ -138,10 +102,6 @@ class App() : Window(null), NativeMouseListener {
 
         // bottom
         graphics.fillRect(offset, center + 6, thickness, center - 6)
-    }
-
-    private fun exit(code: Int = 0) {
-        System.exit(code)
     }
 }
 
