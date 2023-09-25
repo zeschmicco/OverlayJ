@@ -1,4 +1,7 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.9.10'
     id 'application'
     id 'edu.sc.seis.launch4j' version '3.0.5'
 }
@@ -12,7 +15,6 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     implementation 'net.java.dev.jna:jna:5.13.0'
     implementation 'net.java.dev.jna:jna-platform:5.13.0'
 
@@ -27,17 +29,17 @@ java {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'overlay.Overlay'
+        attributes 'Main-Class': 'overlayj.AppKt'
     }
 }
 
 launch4j {
-    mainClassName = 'overlay.Overlay'
+    mainClassName = 'overlayj.AppKt'
     icon = "${projectDir}/icon.ico"
 }
 
 application {
-    mainClass = 'overlay.Overlay'
+    mainClass = 'overlayj.AppKt'
 }
 
 tasks.named('test') {
