@@ -1,46 +1,39 @@
 package overlayj
 
-import java.awt.AWTException
-import java.awt.Image
-import java.awt.MenuItem
-import java.awt.PopupMenu
-import java.awt.SystemTray
-import java.awt.Toolkit
-import java.awt.TrayIcon
+import overlayj.tray.AboutMenuItem
+import overlayj.tray.QuitMenuItem
+import overlayj.tray.SettingsMenuItem
+import java.awt.*
+import java.awt.event.ActionListener
+import java.awt.event.MouseAdapter
 
-class SystrayIcon : TrayIcon(Companion.getImage(), "OverlayJ", SystrayMenu()) {
+class Systray(config: Config, actionListener: ActionListener) :
+    TrayIcon(getImage(), "OverlayJ", SystrayMenu(config, actionListener)) {
     init {
         setImageAutoSize(true)
+        addMouseListener(SystrayIconMouseListener())
+        SystemTray.getSystemTray().add(this)
     }
-    
+
     companion object {
         fun getImage(): Image {
-            val imageURL = ::SystrayIcon.javaClass.getResource("icon.png")
+            val imageURL = ::Systray.javaClass.getResource("icon.png")
             return Toolkit.getDefaultToolkit().getImage(imageURL)
         }
     }
 }
 
-class SystrayMenu() : PopupMenu("systray menu") {
+private class SystrayIconMouseListener : MouseAdapter() {
+//    override fun mouseClicked(e: MouseEvent?) {
+//        listener.actionPerformed(SystrayActionEvent("show_settings"))
+//    }
+}
+
+private class SystrayMenu(config: Config, listener: ActionListener) : PopupMenu() {
     init {
-        add(MenuItem("About").also { it.addActionListener { about() } })
-        add(MenuItem("Quit").also { it.addActionListener { exit() } })
+        add(SettingsMenuItem(listener))
+        addSeparator()
+        add(AboutMenuItem(listener))
+        add(QuitMenuItem(listener))
     }
-}
-
-fun enableSystray() {
-    try {
-        SystemTray.getSystemTray().add(SystrayIcon())
-    } catch (e: AWTException) {
-        e.printStackTrace()
-        exit(1)
-    }
-}
-
-fun about() {
-    // TODO: open browser with github repo
-}
-
-fun exit(code: Int = 0) {
-    System.exit(code)
 }

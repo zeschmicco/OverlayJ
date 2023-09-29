@@ -10,4 +10,9 @@ class AppTest {
         val classUnderTest = App();
         assertNotNull(classUnderTest.calcDimension(), "app should have a dimension");
     }
+    @Test
+    fun appHasALocation() {
+        val classUnderTest = App();
+        assertNotNull(classUnderTest.calcLocation(), "app should have a location");
+    }
 }
