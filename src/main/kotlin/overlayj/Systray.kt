@@ -7,8 +7,8 @@ import java.awt.*
 import java.awt.event.ActionListener
 import java.awt.event.MouseAdapter
 
-class Systray(config: Config, actionListener: ActionListener) :
-    TrayIcon(getImage(), "OverlayJ", SystrayMenu(config, actionListener)) {
+class Systray(actionListener: ActionListener) :
+    TrayIcon(getImage(), "OverlayJ", SystrayMenu(actionListener)) {
     init {
         setImageAutoSize(true)
         addMouseListener(SystrayIconMouseListener())
@@ -29,7 +29,7 @@ private class SystrayIconMouseListener : MouseAdapter() {
 //    }
 }
 
-private class SystrayMenu(config: Config, listener: ActionListener) : PopupMenu() {
+private class SystrayMenu(listener: ActionListener) : PopupMenu() {
     init {
         add(SettingsMenuItem(listener))
         addSeparator()

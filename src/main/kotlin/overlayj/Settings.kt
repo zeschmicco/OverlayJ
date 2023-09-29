@@ -34,7 +34,7 @@ class Settings(val config: Config) : JFrame() {
         size = Dimension(640, 480)
     }
 
-    fun calcLocation(): Unit {
+    fun calcLocation() {
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val gd = ge.defaultScreenDevice
         val dm = gd.getDisplayMode()

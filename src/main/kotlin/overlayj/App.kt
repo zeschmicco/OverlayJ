@@ -19,7 +19,7 @@ class App() : NativeMouseListener, NativeKeyListener {
         GlobalScreen.addNativeMouseListener(this)
         GlobalScreen.addNativeKeyListener(this)
 
-        Systray(settings.config) { menuEvent ->
+        Systray { menuEvent ->
             when (menuEvent.actionCommand) {
                 "showSettings" -> {
                     settings.isVisible = true
@@ -62,7 +62,7 @@ class App() : NativeMouseListener, NativeKeyListener {
 fun main(args: Array<String>) {
     try {
         GlobalScreen.registerNativeHook()
-        FlatLightLaf.setup();
+        FlatLightLaf.setup()
         App()
     } catch (ex: NativeHookException) {
         System.err.println("There was a problem registering the native hook.")
