@@ -1,19 +1,19 @@
 package overlayj
 
-import com.formdev.flatlaf.FlatLightLaf
 import com.github.kwhat.jnativehook.GlobalScreen
 import com.github.kwhat.jnativehook.NativeHookException
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent
 import com.github.kwhat.jnativehook.keyboard.NativeKeyListener
 import com.github.kwhat.jnativehook.mouse.NativeMouseEvent
 import com.github.kwhat.jnativehook.mouse.NativeMouseListener
+import com.github.weisj.darklaf.LafManager
 import java.awt.Desktop
 import java.net.URI
 import kotlin.system.exitProcess
 
 class App() : NativeMouseListener, NativeKeyListener {
-    private val settings = Settings(Config())
-    private val crosshair = Crosshair(settings.config)
+    private val settings = Settings()
+    private val crosshair = Crosshair(settings)
 
     init {
         GlobalScreen.addNativeMouseListener(this)
@@ -35,12 +35,14 @@ class App() : NativeMouseListener, NativeKeyListener {
                 }
             }
         }
+
+        settings.isVisible = true
     }
 
     override fun nativeKeyTyped(evt: NativeKeyEvent) {
-        when(evt.keyChar) {
+        when (evt.keyChar) {
             'X' -> {
-                if(evt.modifiers == 9)
+                if (evt.modifiers == 9)
                     crosshair.isVisible = !crosshair.isVisible
             }
         }
@@ -62,7 +64,11 @@ class App() : NativeMouseListener, NativeKeyListener {
 fun main(args: Array<String>) {
     try {
         GlobalScreen.registerNativeHook()
-        FlatLightLaf.setup()
+
+        //FlatLightLaf.setup()
+        LafManager.setDecorationsEnabled(true)
+        LafManager.installTheme(LafManager.getPreferredThemeStyle());
+
         App()
     } catch (ex: NativeHookException) {
         System.err.println("There was a problem registering the native hook.")

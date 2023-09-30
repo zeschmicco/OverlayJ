@@ -1,0 +1,48 @@
+{
+  "hideOnADS": true,
+  "adsButton": 2,
+  "crosshairs": [
+    {
+      "id": "default",
+      "name": "Default",
+      "layers": [
+        {
+          "line": {
+            "top": false,
+            "bottom": true,
+            "left": true,
+            "right": true,
+            "color": "#FF0000",
+            "length": 12,
+            "offset": 6,
+            "thickness": 2
+          },
+          "dot": {
+            "show": true,
+            "radius": 3,
+            "filled": true,
+            "color": "#00FF0088"
+          }
+        },
+        {
+          "line": {
+            "top": true,
+            "bottom": false,
+            "left": false,
+            "right": false,
+            "color": "#3333FF99",
+            "length": 10,
+            "offset": 6,
+            "thickness": 2
+          },
+          "dot": {
+            "show": false,
+            "radius": 3,
+            "filled": true,
+            "color": "#00FF0088"
+          }
+        }
+      ]
+    }
+  ]
+}

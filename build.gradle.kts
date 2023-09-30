@@ -1,18 +1,17 @@
-import org.jetbrains.kotlin.cli.jvm.main
-
-plugins {
-    kotlin("jvm") version "1.9.10"
-    id("application")
-    id("edu.sc.seis.launch4j") version "3.0.5"
-}
-
 group = "overlayj"
 version = "0.2.0"
 
+plugins {
+    kotlin("jvm") version "1.9.10"
+    kotlin("plugin.serialization") version "1.9.10"
+    id("application")
+    id("java")
+    id("edu.sc.seis.launch4j") version "3.0.5"
+    id("com.github.ben-manes.versions") version "0.48.0"
+}
+
 repositories {
     mavenCentral()
-    maven("https://jitpack.io")
-    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
 }
 
 kotlin {
@@ -30,14 +29,16 @@ launch4j {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
     implementation("net.java.dev.jna:jna:5.13.0")
     implementation("net.java.dev.jna:jna-platform:5.13.0")
     implementation("com.github.kwhat:jnativehook:2.2.2")
-    implementation("cc.ekblad:4koma:1.2.0")
     implementation("com.formdev:flatlaf:3.2.1")
+    implementation("com.github.weisj:darklaf-core:3.0.2")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
 
 tasks.jar {
@@ -52,6 +53,6 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-//tasks.named("test") {
-//    useJUnitPlatform()
-//}
+tasks.test {
+    useJUnitPlatform()
+}

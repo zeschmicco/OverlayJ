@@ -1,19 +1,24 @@
 package overlayj
 
-import java.awt.BorderLayout
-import java.awt.Dimension
-import java.awt.GraphicsEnvironment
-import java.awt.Point
+import overlayj.config.ConfigCrosshair
+import overlayj.config.ConfigData
+import overlayj.config.read
+import java.awt.*
 import javax.swing.JButton
 import javax.swing.JFrame
 import javax.swing.JSlider
+import javax.swing.event.ChangeEvent
+import javax.swing.event.ChangeListener
 
-class Settings(val config: Config) : JFrame() {
+class Settings() : JFrame() {
+    var config: ConfigData = read()
+    var crosshairConfig: ConfigCrosshair = config.crosshairs.get(0)
+
+    val changeListeners = mutableListOf<ChangeListener>()
+
     init {
-        calcSize()
-        calcLocation()
+        setBounds()
         isVisible = false
-
         layout = BorderLayout()
 
         add(
@@ -24,21 +29,54 @@ class Settings(val config: Config) : JFrame() {
                 28
             ).also { slider ->
                 slider.addChangeListener {
-                    config.edgeLength = slider.value
+                    crosshairConfig.layers.get(0).line.length = slider.value
+                    notifyChangeListeners()
                 }
             })
         add(JButton("Close").also { it.addActionListener { isVisible = false } }, BorderLayout.SOUTH)
     }
 
-    fun calcSize() {
-        size = Dimension(640, 480)
+    fun notifyChangeListeners() {
+        println("settings.notifyChangeListeners()")
+        changeListeners.forEach {
+            it.stateChanged(ChangeEvent(crosshairConfig))
+        }
     }
 
-    fun calcLocation() {
+    fun addChangeListener(cl: ChangeListener) {
+        cl.stateChanged(ChangeEvent(crosshairConfig))
+        changeListeners.add(cl)
+    }
+
+    fun setBounds() {
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val gd = ge.defaultScreenDevice
         val dm = gd.getDisplayMode()
 
-        location = Point(dm.width - size.width, dm.height - size.height - 48)
+        val size = Dimension(640, 480)
+        val location = Point(dm.width - size.width, dm.height - size.height - 48)
+
+        super.setBounds(location.x, location.y, size.width, size.height)
+    }
+
+    companion object {
+        fun decodeColor(color: String): Color {
+            return when (color.length) {
+                7 -> Color(
+                    Integer.valueOf(color.substring(1, 3), 16),
+                    Integer.valueOf(color.substring(3, 5), 16),
+                    Integer.valueOf(color.substring(5, 7), 16),
+                )
+
+                9 -> Color(
+                    Integer.valueOf(color.substring(1, 3), 16),
+                    Integer.valueOf(color.substring(3, 5), 16),
+                    Integer.valueOf(color.substring(5, 7), 16),
+                    Integer.valueOf(color.substring(7, 9), 16),
+                )
+
+                else -> throw IllegalStateException("Color could not be parsed: $color")
+            }
+        }
     }
 }

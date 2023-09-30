@@ -5,3 +5,7 @@
 
 ## Create .exe with Launch4J
 - `gradlew createExe`
+
+
+# TODO
+- ability to load image as a crosshair layer
