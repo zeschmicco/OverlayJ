@@ -7,13 +7,15 @@ import com.sun.jna.platform.win32.WinUser
 import overlayj.config.ConfigCrosshair
 import overlayj.config.ConfigCrosshairLayerDot
 import overlayj.config.ConfigCrosshairLayerLine
-import java.awt.*
-import javax.imageio.ImageIO
+import java.awt.Color
+import java.awt.Graphics
+import java.awt.GraphicsEnvironment
+import java.awt.Point
 import javax.swing.JFrame
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 
-class Crosshair(private val settings: Settings) : JFrame(), ChangeListener {
+class Crosshair(settings: Settings) : JFrame(), ChangeListener {
     private lateinit var crosshairCfg: ConfigCrosshair
     private val transparent = Color(127, 0, 0, 32)
 
@@ -32,7 +34,7 @@ class Crosshair(private val settings: Settings) : JFrame(), ChangeListener {
         enableWindowsTransparency()
     }
 
-    fun setBounds() {
+    private fun setBounds() {
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val gd = ge.defaultScreenDevice
         val dm = gd.getDisplayMode()
@@ -45,7 +47,7 @@ class Crosshair(private val settings: Settings) : JFrame(), ChangeListener {
         super.setBounds(location.x, location.y, size, size)
     }
 
-    fun enableWindowsTransparency() {
+    private fun enableWindowsTransparency() {
         val hwnd = WinDef.HWND()
         hwnd.setPointer(Native.getComponentPointer(this))
 
@@ -112,10 +114,10 @@ class Crosshair(private val settings: Settings) : JFrame(), ChangeListener {
         return this.size / 2 - size
     }
 
-    companion object {
-        fun getImage(): Image {
-            val imageURL = ::Crosshair.javaClass.getResource("crosshair.png")
-            return ImageIO.read(imageURL)
-        }
-    }
+//    companion object {
+//        fun getImage(): Image {
+//            val imageURL = ::Crosshair.javaClass.getResource("crosshair.png")
+//            return ImageIO.read(imageURL)
+//        }
+//    }
 }
