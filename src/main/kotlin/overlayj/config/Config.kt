@@ -4,15 +4,15 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
 
-private val configFilename = "overlayj.json"
+private const val CONFIG_FILENAME = "overlayj.json"
 
-fun read(): ConfigData {
-    val jsonString = File(configFilename).inputStream().readBytes().toString(Charsets.UTF_8)
-    return Json.decodeFromString<ConfigData>(jsonString)
+fun read(): Config {
+    val jsonString = File(CONFIG_FILENAME).inputStream().readBytes().toString(Charsets.UTF_8)
+    return Json.decodeFromString<Config>(jsonString)
 }
 
 @Serializable
-data class ConfigData(
+data class Config(
     var hideOnADS: Boolean,
     var adsButton: Int,
     var crosshairs: List<ConfigCrosshair>)

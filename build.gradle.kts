@@ -1,11 +1,11 @@
 group = "overlayj"
-version = "0.2.0"
+version = "0.2.0-SNAPSHOT"
 
 plugins {
+    application
     kotlin("jvm") version "1.9.10"
     kotlin("plugin.serialization") version "1.9.10"
-    id("application")
-    id("java")
+
     id("edu.sc.seis.launch4j") version "3.0.5"
     id("com.github.ben-manes.versions") version "0.48.0"
 }
@@ -19,7 +19,7 @@ kotlin {
 }
 
 application {
-    mainClass.set("overlayj.App")
+    mainClass.set("overlayj.AppKt")
 }
 
 launch4j {
@@ -45,14 +45,23 @@ tasks.jar {
     manifest {
         attributes["Main-Class"] = application.mainClass
     }
-    val dependencies = configurations
-        .runtimeClasspath
-        .get()
-        .map(::zipTree) // OR .map { zipTree(it) }
+    val dependencies = configurations.runtimeClasspath.get().map(::zipTree)
     from(dependencies)
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.register<Zip>("releaseZip") {
+    group = "distribution"
+
+    archiveFileName.set("${project.name}-${project.version}.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("dist"))
+
+    from(tasks.createExe)
+    from(layout.projectDirectory.file("overlayj.json"))
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

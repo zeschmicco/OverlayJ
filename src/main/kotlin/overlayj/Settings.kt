@@ -1,7 +1,7 @@
 package overlayj
 
+import overlayj.config.Config
 import overlayj.config.ConfigCrosshair
-import overlayj.config.ConfigData
 import overlayj.config.read
 import java.awt.*
 import javax.swing.JButton
@@ -10,11 +10,11 @@ import javax.swing.JSlider
 import javax.swing.event.ChangeEvent
 import javax.swing.event.ChangeListener
 
-class Settings() : JFrame() {
-    var config: ConfigData = read()
-    var crosshairConfig: ConfigCrosshair = config.crosshairs.get(0)
+class Settings : JFrame() {
+    var config: Config = read()
+    private var crosshairConfig: ConfigCrosshair = config.crosshairs[0]
 
-    val changeListeners = mutableListOf<ChangeListener>()
+    private val changeListeners = mutableListOf<ChangeListener>()
 
     init {
         setBounds()
@@ -29,14 +29,14 @@ class Settings() : JFrame() {
                 28
             ).also { slider ->
                 slider.addChangeListener {
-                    crosshairConfig.layers.get(0).line.length = slider.value
+                    crosshairConfig.layers[0].line.length = slider.value
                     notifyChangeListeners()
                 }
             })
         add(JButton("Close").also { it.addActionListener { isVisible = false } }, BorderLayout.SOUTH)
     }
 
-    fun notifyChangeListeners() {
+    private fun notifyChangeListeners() {
         println("settings.notifyChangeListeners()")
         changeListeners.forEach {
             it.stateChanged(ChangeEvent(crosshairConfig))
@@ -48,7 +48,7 @@ class Settings() : JFrame() {
         changeListeners.add(cl)
     }
 
-    fun setBounds() {
+    private fun setBounds() {
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val gd = ge.defaultScreenDevice
         val dm = gd.getDisplayMode()

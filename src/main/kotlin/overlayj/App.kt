@@ -11,7 +11,7 @@ import java.awt.Desktop
 import java.net.URI
 import kotlin.system.exitProcess
 
-class App() : NativeMouseListener, NativeKeyListener {
+class App : NativeMouseListener, NativeKeyListener {
     private val settings = Settings()
     private val crosshair = Crosshair(settings)
 
@@ -61,13 +61,13 @@ class App() : NativeMouseListener, NativeKeyListener {
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     try {
         GlobalScreen.registerNativeHook()
 
         //FlatLightLaf.setup()
         LafManager.setDecorationsEnabled(true)
-        LafManager.installTheme(LafManager.getPreferredThemeStyle());
+        LafManager.installTheme(LafManager.getPreferredThemeStyle())
 
         App()
     } catch (ex: NativeHookException) {
