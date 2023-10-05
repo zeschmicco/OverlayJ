@@ -1,6 +1,7 @@
 package overlayj.config
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
@@ -11,15 +12,26 @@ fun read(): Config {
     return Json.decodeFromString<Config>(jsonString)
 }
 
+fun write(config: Config) {
+    val json = Json.encodeToString(config)
+    File(CONFIG_FILENAME).bufferedWriter().use { it.write(json) }
+}
+
+fun clone(config: ConfigCrosshair): ConfigCrosshair {
+    val json = Json.encodeToString(config)
+    return Json.decodeFromString<ConfigCrosshair>(json)
+}
+
 @Serializable
 data class Config(
     var hideOnADS: Boolean,
     var adsButton: Int,
-    var crosshairs: List<ConfigCrosshair>)
+    var current: ConfigCrosshair,
+    var crosshairs: MutableList<ConfigCrosshair>
+)
 
 @Serializable
 data class ConfigCrosshair(
-    var id: String,
     var name: String,
     var layers: List<ConfigCrosshairLayer>
 )
@@ -37,15 +49,18 @@ data class ConfigCrosshairLayerLine(
     var left: Boolean,
     var right: Boolean,
     var color: String,
+    var opacity: Int,
     var length: Int,
     var offset: Int,
     var thickness: Int
-)
+) {
+}
 
 @Serializable
 data class ConfigCrosshairLayerDot(
     var show: Boolean,
     var radius: Int,
+    var opacity: Int,
     var filled: Boolean,
     var color: String
 )

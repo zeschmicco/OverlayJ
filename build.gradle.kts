@@ -3,11 +3,11 @@ version = "0.2.0-SNAPSHOT"
 
 plugins {
     application
+
     kotlin("jvm") version "1.9.10"
     kotlin("plugin.serialization") version "1.9.10"
 
     id("edu.sc.seis.launch4j") version "3.0.5"
-    id("com.github.ben-manes.versions") version "0.48.0"
 }
 
 repositories {
@@ -30,11 +30,16 @@ launch4j {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1")
+
     implementation("net.java.dev.jna:jna:5.13.0")
     implementation("net.java.dev.jna:jna-platform:5.13.0")
     implementation("com.github.kwhat:jnativehook:2.2.2")
+
+    implementation("org.greenrobot:eventbus-java:3.3.1")
+
     implementation("com.formdev:flatlaf:3.2.1")
-    implementation("com.github.weisj:darklaf-core:3.0.2")
+    implementation("com.formdev:flatlaf-extras:3.2.1")
+    implementation("com.formdev:flatlaf-fonts-inter:3.19")
 
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")

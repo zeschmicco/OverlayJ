@@ -1,74 +1,36 @@
 package overlayj
 
-import com.sun.jna.Native
-import com.sun.jna.platform.win32.User32
-import com.sun.jna.platform.win32.WinDef
-import com.sun.jna.platform.win32.WinUser
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
+import overlayj.Constants.Companion.BORDER_COLOR
 import overlayj.config.ConfigCrosshair
 import overlayj.config.ConfigCrosshairLayerDot
 import overlayj.config.ConfigCrosshairLayerLine
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Graphics
-import java.awt.GraphicsEnvironment
-import java.awt.Point
-import javax.swing.JFrame
+import javax.swing.JPanel
+import javax.swing.border.CompoundBorder
+import javax.swing.border.EmptyBorder
+import javax.swing.border.MatteBorder
 
-class Crosshair() : JFrame() {
-    private val transparent = Color(0, 0, 0, 0)
+class CrosshairPanel(private val crosshair: ConfigCrosshair) : JPanel() {
+    private val transparent = Color(0, 0, 0, 16)
     private val size = 128
 
-    private var configCrosshair: ConfigCrosshair? = null
     init {
-        isUndecorated = true
-        isAlwaysOnTop = true
+        border = CompoundBorder(
+            EmptyBorder(0,0,0,0),
+            MatteBorder(1,1,1,1, BORDER_COLOR)
+        )
         background = transparent
-        type = Type.UTILITY
         isVisible = true
 
-        setLocationRelativeTo(null)
-        setBounds()
-
-        enableWindowsTransparency()
-
-        EventBus.getDefault().register(this)
-    }
-
-    private fun setBounds() {
-        val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
-        val gd = ge.defaultScreenDevice
-        val dm = gd.getDisplayMode()
-
-        val location = Point(
-            (dm.width / 2).minus(size / 2),
-            (dm.height / 2).minus(size / 2)
-        )
-
-        super.setBounds(location.x, location.y, size, size)
-    }
-
-    private fun enableWindowsTransparency() {
-        val hwnd = WinDef.HWND()
-        hwnd.setPointer(Native.getComponentPointer(this))
-
-        var wl = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE)
-        wl = wl or WinUser.WS_EX_LAYERED or WinUser.WS_EX_TRANSPARENT
-
-        User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_EXSTYLE, wl)
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun stateChanged(evt: ConfigEvent) {
-        println("crosshair.stateChanged()")
-        configCrosshair = evt.config
-        repaint()
+        preferredSize = Dimension(size, size)
+        maximumSize = Dimension(size, size)
     }
 
     override fun paint(graphics: Graphics) {
         super.paint(graphics)
-        configCrosshair?.layers?.forEachIndexed { idx, layer ->
+        crosshair.layers.forEachIndexed { idx, layer ->
             println("painting layer $idx: $layer")
             if (layer.dot.show)
                 paintDot(graphics, layer.dot)
@@ -116,11 +78,4 @@ class Crosshair() : JFrame() {
     private fun offsetFromCenter(size: Int): Int {
         return this.size / 2 - size
     }
-
-//    companion object {
-//        fun getImage(): Image {
-//            val imageURL = ::Crosshair.javaClass.getResource("crosshair.png")
-//            return ImageIO.read(imageURL)
-//        }
-//    }
 }

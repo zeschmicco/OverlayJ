@@ -9,3 +9,4 @@
 
 # TODO
 - ability to load image as a crosshair layer
+- catch actions further up

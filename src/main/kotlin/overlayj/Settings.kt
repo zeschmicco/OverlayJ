@@ -1,82 +1,139 @@
 package overlayj
 
-import overlayj.config.Config
+import com.formdev.flatlaf.util.UIScale
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import overlayj.config.ConfigCrosshair
+import overlayj.config.clone
 import overlayj.config.read
+import overlayj.config.write
+import overlayj.design.DesignPanel
+import overlayj.saves.SavePanel
+import overlayj.ui.Sidebar
 import java.awt.*
-import javax.swing.JButton
 import javax.swing.JFrame
-import javax.swing.JSlider
-import javax.swing.event.ChangeEvent
-import javax.swing.event.ChangeListener
+import javax.swing.UIManager
 
 class Settings : JFrame() {
-    var config: Config = read()
-    private var crosshairConfig: ConfigCrosshair = config.crosshairs[0]
+    private val windowSize = Dimension(1024, 600)
 
-    private val changeListeners = mutableListOf<ChangeListener>()
+    var config = read()
+    private var currentCrosshair = config.current
+
+    private var mainComponent: Component? = null
 
     init {
-        setBounds()
-        isVisible = false
-        layout = BorderLayout()
+        printUiInformation()
+        prepare()
 
-        add(
-            JSlider(
-                JSlider.HORIZONTAL,
-                12,
-                96,
-                28
-            ).also { slider ->
-                slider.addChangeListener {
-                    crosshairConfig.layers[0].line.length = slider.value
-                    notifyChangeListeners()
-                }
-            })
-        add(JButton("Close").also { it.addActionListener { isVisible = false } }, BorderLayout.SOUTH)
-    }
+        EventBus.getDefault().post(ConfigEvent(currentCrosshair))
+        EventBus.getDefault().register(this)
 
-    private fun notifyChangeListeners() {
-        println("settings.notifyChangeListeners()")
-        changeListeners.forEach {
-            it.stateChanged(ChangeEvent(crosshairConfig))
+        Sidebar().also {
+            add(it, BorderLayout.WEST)
         }
+
+        mainComponent = SavePanel(config.crosshairs).also {
+            add(it, BorderLayout.CENTER)
+        }
+
+
+        pack()
     }
 
-    fun addChangeListener(cl: ChangeListener) {
-        cl.stateChanged(ChangeEvent(crosshairConfig))
-        changeListeners.add(cl)
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onConfigChanged(evt: ConfigChangedEvent) {
+        EventBus.getDefault().post(ConfigEvent(currentCrosshair))
     }
 
-    private fun setBounds() {
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onDesignSave(evt: DesignSaveEvent) {
+        println("saving current crosshair to ${evt.name}")
+        val newCrosshairConfig = clone(currentCrosshair)
+        config.crosshairs.add(0, newCrosshairConfig)
+        write(config)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onCrosshairSelection(evt: CrosshairSelectionEvent) {
+        println("crosshair selection to ${evt.configCrosshair.name}")
+        currentCrosshair = evt.configCrosshair
+        EventBus.getDefault().post(ConfigEvent(currentCrosshair))
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onSidebarButton(evt: SidebarButtonClicked) {
+        println("switching panel to ${evt.name}")
+
+        if (mainComponent != null)
+            contentPane.remove(mainComponent)
+
+        when (evt.name) {
+            "saved" -> {
+                mainComponent = SavePanel(config.crosshairs).also {
+                    add(it, BorderLayout.CENTER)
+                }
+            }
+
+            "design" -> {
+                mainComponent = DesignPanel(currentCrosshair).also {
+                    add(it, BorderLayout.CENTER)
+                }
+            }
+
+            else -> {
+                println("Unknown Sidebar Button ${evt.name}")
+            }
+        }
+
+        contentPane.revalidate()
+        contentPane.repaint()
+    }
+
+    private fun prepare() {
+        setLocationRelativeTo(null)
+        minimumSize = windowSize
+        isVisible = true
+
         val ge = GraphicsEnvironment.getLocalGraphicsEnvironment()
         val gd = ge.defaultScreenDevice
         val dm = gd.getDisplayMode()
 
-        val size = Dimension(640, 480)
-        val location = Point(dm.width - size.width, dm.height - size.height - 48)
+        val location = Point(dm.width / 2 - windowSize.width / 2, dm.height / 2 - windowSize.height / 2)
 
-        super.setBounds(location.x, location.y, size.width, size.height)
+        super.setBounds(location.x, location.y, windowSize.width, windowSize.height)
+    }
+
+    private fun printUiInformation() {
+        var javaVendor = System.getProperty("java.vendor")
+        if ("Oracle Corporation" == javaVendor) javaVendor = null
+        val systemScaleFactor: Double = UIScale.getSystemScaleFactor(graphicsConfiguration)
+        val userScaleFactor = UIScale.getUserScaleFactor()
+        val font = UIManager.getFont("Label.font")
+        val newInfo =
+            ("(Java " + System.getProperty("java.version") + (if (javaVendor != null) "; $javaVendor" else "") + (if (systemScaleFactor != 1.0) ";  system scale factor $systemScaleFactor" else "") + (if (userScaleFactor != 1f) ";  user scale factor $userScaleFactor" else "") + (if (systemScaleFactor == 1.0 && userScaleFactor == 1f) "; no scaling" else "") + "; " + font.family + " " + font.size + (if (font.isBold) " BOLD" else "") + (if (font.isItalic) " ITALIC" else "") + ")")
+        println(newInfo)
     }
 
     companion object {
-        fun decodeColor(color: String): Color {
-            return when (color.length) {
-                7 -> Color(
-                    Integer.valueOf(color.substring(1, 3), 16),
-                    Integer.valueOf(color.substring(3, 5), 16),
-                    Integer.valueOf(color.substring(5, 7), 16),
-                )
+        fun encodeColor(color: Color): String {
+            return String.format("#%02x%02x%02x", color.red, color.green, color.blue)
+        }
 
-                9 -> Color(
-                    Integer.valueOf(color.substring(1, 3), 16),
-                    Integer.valueOf(color.substring(3, 5), 16),
-                    Integer.valueOf(color.substring(5, 7), 16),
-                    Integer.valueOf(color.substring(7, 9), 16),
-                )
-
-                else -> throw IllegalStateException("Color could not be parsed: $color")
-            }
+        fun decodeColor(color: String, alpha: Int): Color {
+            return Color(
+                Integer.valueOf(color.substring(1, 3), 16),
+                Integer.valueOf(color.substring(3, 5), 16),
+                Integer.valueOf(color.substring(5, 7), 16),
+                alpha
+            )
         }
     }
 }
+
+class SidebarButtonClicked(val name: String)
+class CrosshairSelectionEvent(val configCrosshair: ConfigCrosshair)
+class DesignSaveEvent(val name: String)
+class ConfigChangedEvent
+class ConfigEvent(val config: ConfigCrosshair)
